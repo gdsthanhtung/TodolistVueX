@@ -1,31 +1,119 @@
 <template>
   <div id="app">
-    <img src="./assets/logo.png">
-    <h1>{{ msg }}</h1>
-    <h2>Essential Links</h2>
-    <ul>
-      <li><a href="https://vuejs.org" target="_blank">Core Docs</a></li>
-      <li><a href="https://forum.vuejs.org" target="_blank">Forum</a></li>
-      <li><a href="https://chat.vuejs.org" target="_blank">Community Chat</a></li>
-      <li><a href="https://twitter.com/vuejs" target="_blank">Twitter</a></li>
-    </ul>
-    <h2>Ecosystem</h2>
-    <ul>
-      <li><a href="http://router.vuejs.org/" target="_blank">vue-router</a></li>
-      <li><a href="http://vuex.vuejs.org/" target="_blank">vuex</a></li>
-      <li><a href="http://vue-loader.vuejs.org/" target="_blank">vue-loader</a></li>
-      <li><a href="https://github.com/vuejs/awesome-vue" target="_blank">awesome-vue</a></li>
-    </ul>
+    <b-container>
+      <comp-title />
+
+      <b-row>
+        <comp-control
+          v-bind:strSearch="strSearch"
+          v-on:handleStrSearch="handleStrSearch"
+          v-bind:orderSort="orderSort"
+          v-on:handleOrderSort="handleOrderSort"
+        />
+
+        <comp-form
+          v-bind:isShowForm="isShowForm"
+          v-on:handleShowForm="handleShowForm"
+          v-on:handleAddTask="handleAddTask"
+          v-bind:taskSelected="taskSelected"
+          v-on:handleUpdateTask="handleUpdateTask"
+        />
+      </b-row>
+
+      <todo-list-table
+        v-bind:listTask="listTaskFiltered"
+        v-on:handleAction="handleAction"
+      />
+
+    </b-container>
   </div>
 </template>
 
 <script>
+import TodoListTable from './components/TodoListTable.vue'
+import CompTitle from './components/CompTitle.vue'
+import CompControl from './components/CompControl.vue'
+import CompForm from './components/CompForm.vue'
+
+import listTask from './mockdatas/listTask'
+
 export default {
   name: 'app',
-  data () {
+  components: {
+    TodoListTable,
+    CompTitle,
+    CompControl,
+    CompForm
+  },
+  data() {
     return {
-      msg: 'Welcome to Your Vue.js App'
+      listTask,
+      isShowForm: false,
+      strSearch: '',
+      orderSort: {
+        by: 'name',
+        dir: 'asc'
+      },
+      taskSelected: null
     }
+  },
+  methods: {
+    handleShowForm() {
+      if (!this.isShowForm) {
+        this.resetTaskSelected();
+      }
+      this.isShowForm = !this.isShowForm;
+    },
+    handleStrSearch(data) {
+      this.strSearch = data;
+    },
+    handleOrderSort(data) {
+      this.orderSort = data;
+    },
+    handleAddTask(newTask) {
+      this.listTask.push(newTask);
+    },
+    handleUpdateTask(newTask) {
+      this.listTask = this.listTask.map(task => {
+        if (task.id === newTask.id) {
+          return newTask;
+        }
+        return task;
+      });
+    },
+    handleAction({ action, data }) {
+      if (action === 'delete') {
+        this.handleDeleteTask(data.id);
+      }
+      if (action === 'edit') {
+        this.handleEditTask(data);
+      }
+    },
+    handleDeleteTask(id) {
+      this.listTask = this.listTask.filter(task => task.id !== id);
+    },
+    handleEditTask(task) {
+      this.isShowForm = true;
+      this.taskSelected = task;
+    },
+    resetTaskSelected() {
+      this.taskSelected = null;
+    }
+  },
+  computed: {
+    listTaskFiltered() {
+      let orderSort = this.orderSort;
+      return this.listTask.filter(task => task.name.toLowerCase().includes(this.strSearch.toLowerCase())).sort((a, b) => {
+        if (a[orderSort.by] < b[orderSort.by]) {
+          return orderSort.dir === 'asc' ? -1 : 1;
+        }
+        if (a[orderSort.by] > b[orderSort.by]) {
+          return orderSort.dir === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
   }
 }
 </script>
@@ -35,26 +123,38 @@ export default {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
 }
 
-h1, h2 {
-  font-weight: normal;
+body {
+  padding: 100px 0;
 }
 
-ul {
-  list-style-type: none;
-  padding: 0;
+.table>tbody>tr>td,
+.table>tbody>tr>th,
+.table>tfoot>tr>td,
+.table>tfoot>tr>th,
+.table>thead>tr>td,
+.table>thead>tr>th {
+  vertical-align: middle;
 }
 
-li {
+.container>.row {
+  margin-top: 20px;
+  margin-bottom: 30px;
+}
+
+span.badge-medium {
+  padding: 11px 10px;
+  margin: 0px 8px;
+  font-size: 16px;
   display: inline-block;
-  margin: 0 10px;
+  vertical-align: top;
 }
 
-a {
-  color: #42b983;
+@media (max-width: 992px) {
+  .add-task {
+    margin-top: 50px;
+  }
 }
 </style>

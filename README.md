@@ -1,4 +1,4 @@
-# todolistvuex
+# todolistvue
 
 > A Vue.js project
 
